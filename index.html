@@ -2,8 +2,14 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>SET — The Card Game</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="apple-touch-icon" href="favicon.svg">
+<meta name="theme-color" content="#0f1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="description" content="Practice the SET card game — find patterns, improve your skills.">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -378,6 +384,96 @@ button:active { transform:translateY(0); }
 .pause-btns { display:flex; gap:12px; justify-content:center; }
 #btn-resume  { background:#7733bb; color:#fff; padding:12px 28px; }
 #btn-go-home { background:transparent; color:#80a0cc; border:1px solid #2a3a60; padding:12px 28px; }
+
+/* ══════════════════════════════════
+   MOBILE STATS BAR (game screen)
+══════════════════════════════════ */
+#mobile-stats {
+  display: none;
+  width: 100%;
+  max-width: 1100px;
+  align-self: center;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  padding: 8px 16px;
+  margin-bottom: 4px;
+}
+.ms-row { display: flex; justify-content: space-around; gap: 4px; }
+.ms-item { text-align: center; }
+.ms-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; display: block; }
+.ms-value { font-size: 1rem; font-weight: 800; }
+
+/* hints 2-column grid on mobile */
+#hints-grid { display: contents; }
+
+/* ══════════════════════════════════
+   RESPONSIVE — TABLET (≤ 860px)
+══════════════════════════════════ */
+@media (max-width: 860px) {
+  #side { width: 200px; }
+  .stat-val { font-size: 0.92rem; }
+}
+
+/* ══════════════════════════════════
+   RESPONSIVE — MOBILE (≤ 700px)
+══════════════════════════════════ */
+@media (max-width: 700px) {
+  /* home */
+  #home { padding: 0 16px 36px; }
+  .logo { font-size: 3.8rem; letter-spacing: 10px; }
+  .logo-sub { font-size: 0.82rem; letter-spacing: 2px; margin-bottom: 28px; }
+  .btn-start { padding: 15px 44px; font-size: 1.2rem; }
+  .hero { padding: 36px 0 28px; }
+  .lang-row { margin-bottom: 0; }
+  .home-grid { gap: 12px; }
+  .hbox { padding: 16px; }
+  .rules-grid { grid-template-columns: 1fr; }
+  .rule-chip { font-size: 0.78rem; }
+
+  /* game topbar */
+  #game { padding: 0 12px 28px; }
+  .game-topbar { padding: 10px 0 6px; gap: 8px; flex-wrap: wrap; }
+  .game-title { font-size: 1.3rem; letter-spacing: 4px; }
+  .topbar-btn { padding: 6px 10px; font-size: 0.75rem; }
+
+  /* mobile stats bar */
+  #mobile-stats { display: flex; flex-direction: column; gap: 4px; }
+
+  /* app layout → column */
+  #app { flex-direction: column; gap: 12px; }
+
+  /* hide desktop stats panel (replaced by mobile bar) */
+  #side > .panel-box:first-child { display: none; }
+
+  #side { width: 100%; }
+  #side .panel-box { border-radius: 12px; }
+
+  /* hints 2×2 grid */
+  #hints-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  #hints-grid .hint-btn { margin-bottom: 0; font-size: 0.76rem; padding: 8px 8px; }
+
+  /* board */
+  #board { gap: 7px; }
+  .card { border-radius: 10px; border-width: 2px; }
+
+  /* overlays */
+  #overlay-box { padding: 28px 24px; margin: 16px; }
+  #overlay-box h2 { font-size: 1.6rem; }
+  #pause-box { padding: 28px 24px; margin: 16px; }
+  #pause-box h2 { font-size: 1.5rem; }
+  .ov-btns { flex-direction: column; align-items: center; gap: 10px; }
+  .ov-btns button { width: 100%; max-width: 240px; }
+  .pause-btns { flex-direction: column; align-items: center; }
+  .pause-btns button { width: 100%; max-width: 220px; }
+}
+
+/* ── SMALL PHONES (≤ 400px) ── */
+@media (max-width: 400px) {
+  .logo { font-size: 3rem; letter-spacing: 8px; }
+  .game-title { font-size: 1.1rem; }
+  #board { gap: 5px; }
+  .card { border-radius: 8px; }
+}
 </style>
 </head>
 <body>
@@ -440,6 +536,17 @@ button:active { transform:translateY(0); }
     <button class="topbar-btn" onclick="showPause()" data-i18n="pause_btn"></button>
   </div>
 
+  <!-- Mobile compact stats bar (hidden on desktop) -->
+  <div id="mobile-stats">
+    <div class="ms-row">
+      <div class="ms-item"><span class="ms-label" data-i18n="s_score"></span><span class="ms-value gold" id="m-score">0</span></div>
+      <div class="ms-item"><span class="ms-label" data-i18n="s_time"></span><span class="ms-value" id="m-time">0:00</span></div>
+      <div class="ms-item"><span class="ms-label" data-i18n="s_sets"></span><span class="ms-value" id="m-sets">0</span></div>
+      <div class="ms-item"><span class="ms-label" data-i18n="s_streak"></span><span class="ms-value green" id="m-streak">0</span></div>
+      <div class="ms-item"><span class="ms-label" data-i18n="s_deck"></span><span class="ms-value" id="m-deck">69</span></div>
+    </div>
+  </div>
+
   <div id="app">
     <div id="board-wrap">
       <div id="board"></div>
@@ -470,10 +577,12 @@ button:active { transform:translateY(0); }
 
       <div class="panel-box">
         <div class="panel-title" data-i18n="hints_title"></div>
-        <button class="hint-btn" id="h1" onclick="giveHint(1)" data-i18n="h1"></button>
-        <button class="hint-btn" id="h2" onclick="giveHint(2)" data-i18n="h2"></button>
-        <button class="hint-btn" id="h3" onclick="giveHint(3)" data-i18n="h3"></button>
-        <button class="hint-btn" id="h4" onclick="giveHint(4)" data-i18n="h4"></button>
+        <div id="hints-grid">
+          <button class="hint-btn" id="h1" onclick="giveHint(1)" data-i18n="h1"></button>
+          <button class="hint-btn" id="h2" onclick="giveHint(2)" data-i18n="h2"></button>
+          <button class="hint-btn" id="h3" onclick="giveHint(3)" data-i18n="h3"></button>
+          <button class="hint-btn" id="h4" onclick="giveHint(4)" data-i18n="h4"></button>
+        </div>
         <div id="hint-text" data-i18n="hint_idle"></div>
       </div>
     </div>
@@ -876,6 +985,11 @@ function syncUI(){
   document.getElementById('st-el').textContent=setsFound;
   document.getElementById('sr-el').textContent=streak;
   document.getElementById('dk-el').textContent=deck.length;
+  // mobile bar
+  document.getElementById('m-score').textContent=score;
+  document.getElementById('m-sets').textContent=setsFound;
+  document.getElementById('m-streak').textContent=streak;
+  document.getElementById('m-deck').textContent=deck.length;
   const sb=document.getElementById('streak-badge');
   if(streak>=3){ sb.style.display='inline-block'; sb.textContent=T('streak_lbl')+streak; }
   else          { sb.style.display='none'; }
@@ -892,7 +1006,7 @@ function refreshInGameHS(){
 // ══════════════════════════════════════════════════
 //  TIMER
 // ══════════════════════════════════════════════════
-function startTimer(){ clearInterval(timerInterval); timerInterval=setInterval(()=>{timerSec++;document.getElementById('tm-el').textContent=fmtTime(timerSec);},1000); }
+function startTimer(){ clearInterval(timerInterval); timerInterval=setInterval(()=>{timerSec++; const t=fmtTime(timerSec); document.getElementById('tm-el').textContent=t; document.getElementById('m-time').textContent=t;},1000); }
 function pauseTimer(){ clearInterval(timerInterval); }
 function fmtTime(s){ const m=Math.floor(s/60),sec=s%60; return `${m}:${sec.toString().padStart(2,'0')}`; }
 
