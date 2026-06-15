@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SET — משחק הקלפים</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --red:    #e03333;
+  --green:  #1a9e1a;
+  --purple: #7722cc;
+  --bg:     #0f1117;
+  --panel:  #161b27;
+  --border: #2a3450;
+  --accent: #4a90e2;
+  --gold:   #f0c040;
+  --text:   #e0e6f0;
+  --muted:  #6a7a99;
+}
+
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── SCREENS ─────────────────────── */
+.screen { display: none; min-height: 100vh; }
+.screen.active { display: flex; flex-direction: column; align-items: center; }
+
+/* ══════════════════════════════════
+   HOME SCREEN
+══════════════════════════════════ */
+#home {
+  padding: 0 24px 48px;
+  background: radial-gradient(ellipse at top, #1a1040 0%, var(--bg) 60%);
+}
+
+/* hero */
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60px 0 40px;
+  text-align: center;
+}
+
+.logo {
+  font-size: 6rem;
+  font-weight: 900;
+  letter-spacing: 18px;
+  background: linear-gradient(135deg, #c080ff 0%, #60a0ff 50%, #ff80c0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1;
+  margin-bottom: 10px;
+  filter: drop-shadow(0 0 30px rgba(160,100,255,0.4));
+}
+
+.logo-sub {
+  font-size: 1rem;
+  color: var(--muted);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 40px;
+}
+
+.btn-start {
+  padding: 18px 64px;
+  font-size: 1.4rem;
+  font-weight: 800;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  background: linear-gradient(135deg, #7733cc, #4488ff);
+  color: #fff;
+  letter-spacing: 2px;
+  box-shadow: 0 8px 32px rgba(100,60,200,0.5);
+  transition: transform 0.15s, box-shadow 0.15s;
+  margin-bottom: 16px;
+}
+.btn-start:hover {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 14px 40px rgba(100,60,200,0.65);
+}
+
+.btn-continue {
+  padding: 10px 32px;
+  font-size: 1rem;
+  font-weight: 700;
+  border: 2px solid #4060a0;
+  border-radius: 50px;
+  cursor: pointer;
+  background: transparent;
+  color: #80a8ff;
+  letter-spacing: 1px;
+  transition: background 0.15s, transform 0.1s;
+}
+.btn-continue:hover { background: #1a2a50; transform: translateY(-1px); }
+
+/* home grid */
+.home-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  width: 100%;
+  max-width: 860px;
+}
+
+@media(max-width:640px){ .home-grid{ grid-template-columns:1fr; } }
+
+.hbox {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 22px 24px;
+}
+
+.hbox-title {
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+/* records */
+.rec-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+.rec-row:last-child { border-bottom: none; }
+.rec-icon { font-size: 1.1rem; margin-left: 8px; }
+.rec-val { font-weight: 800; color: var(--gold); }
+.rec-val.green { color: #44ee66; }
+.rec-val.blue  { color: #60aaff; }
+
+/* how to play */
+.rules-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.rule-chip {
+  background: #0d1528;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 0.8rem;
+  color: #aac;
+  border: 1px solid #1a2a50;
+  line-height: 1.4;
+}
+
+.rule-chip strong { display: block; color: #c0d0ff; margin-bottom: 3px; font-size: 0.82rem; }
+
+/* example set */
+.example-set {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.mini-card {
+  background: #fff;
+  border-radius: 8px;
+  border: 2px solid #ccd;
+  padding: 4px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  min-width: 60px;
+}
+
+/* settings */
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+  color: #bbc;
+}
+.setting-row:last-child { border-bottom: none; }
+
+.toggle {
+  width: 42px; height: 22px;
+  background: #2a3a60;
+  border-radius: 11px;
+  cursor: pointer;
+  position: relative;
+  border: none;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.toggle::after {
+  content:'';
+  position:absolute;
+  top:3px; left:3px;
+  width:16px; height:16px;
+  border-radius:50%;
+  background:#fff;
+  transition: left 0.2s;
+}
+.toggle.on { background: #5533aa; }
+.toggle.on::after { left: 23px; }
+
+/* ══════════════════════════════════
+   GAME SCREEN
+══════════════════════════════════ */
+#game {
+  padding: 0 20px 32px;
+  align-items: stretch;
+}
+
+.game-topbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 4px;
+  width: 100%;
+  max-width: 1100px;
+  align-self: center;
+}
+
+.game-title {
+  font-size: 1.6rem;
+  font-weight: 900;
+  letter-spacing: 5px;
+  background: linear-gradient(135deg, #c080ff, #60a0ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  flex: 1;
+}
+
+.topbar-btn {
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.topbar-btn:hover { background: #1e2840; }
+
+/* app layout */
+#app {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+  max-width: 1100px;
+  align-self: center;
+  align-items: flex-start;
+}
+
+/* board */
+#board-wrap { flex: 1; min-width: 0; }
+
+#board {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+@keyframes dealIn {
+  from { opacity:0; transform: translateY(-18px) scale(0.85); }
+  to   { opacity:1; transform: translateY(0) scale(1); }
+}
+
+.card {
+  background: #fff;
+  border-radius: 14px;
+  border: 3px solid #d0d8e8;
+  cursor: pointer;
+  padding: 6px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  aspect-ratio: 7/5;
+  user-select: none;
+  transition: border-color 0.12s, transform 0.12s, box-shadow 0.12s;
+  animation: dealIn 0.28s ease both;
+  position: relative;
+}
+
+.card:hover:not(.locked) {
+  border-color: #aab;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+}
+
+.card.selected {
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 0 2px var(--gold), 0 6px 20px rgba(240,192,64,0.4);
+  transform: translateY(-5px);
+}
+
+.card.hint-hi {
+  border-color: #40d8ff !important;
+  box-shadow: 0 0 0 2px #40d8ff, 0 0 18px rgba(64,216,255,0.5);
+}
+
+@keyframes flashGreen {
+  0%,100%{background:#fff;}
+  40%{background:#afffa8;border-color:#22cc44;box-shadow:0 0 24px rgba(34,204,68,.7);}
+}
+@keyframes flashRed {
+  0%,100%{background:#fff;}
+  40%{background:#ffbcbc;border-color:#cc2244;box-shadow:0 0 24px rgba(204,34,68,.7);}
+}
+
+.card.flash-ok  { animation: flashGreen 0.6s ease; }
+.card.flash-bad { animation: flashRed   0.6s ease; }
+.card.locked    { cursor: default; }
+
+.card-key {
+  position: absolute;
+  top: 4px; left: 5px;
+  font-size: 0.62rem;
+  color: #aaa;
+  font-weight: 700;
+}
+
+#game-controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+button { /* base */
+  padding: 10px 18px;
+  border: none;
+  border-radius: 9px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 700;
+  transition: opacity .15s, transform .1s;
+}
+button:hover  { opacity:.88; transform:translateY(-1px); }
+button:active { transform:translateY(0); }
+
+#btn-deal { background:#2a6bbf; color:#fff; }
+#btn-new  { background:#7733bb; color:#fff; }
+
+#streak-badge {
+  display:none;
+  background: linear-gradient(135deg,#f0a000,#ff6600);
+  color:#fff;
+  border-radius:20px;
+  padding:5px 14px;
+  font-size:0.85rem;
+  font-weight:800;
+  box-shadow:0 2px 10px rgba(240,100,0,.5);
+}
+
+#status {
+  margin-top:10px;
+  font-size:1rem;
+  min-height:22px;
+  font-weight:700;
+}
+
+#kb-hint {
+  margin-top:6px;
+  font-size:0.73rem;
+  color:var(--muted);
+}
+
+/* side panel */
+#side {
+  width:228px;
+  flex-shrink:0;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.panel-box {
+  background:var(--panel);
+  border-radius:14px;
+  padding:16px;
+  border:1px solid var(--border);
+}
+
+.panel-title {
+  font-size:0.72rem;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:1.5px;
+  margin-bottom:10px;
+  font-weight:700;
+}
+
+.stat-row {
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  margin-bottom:8px;
+  font-size:0.88rem;
+}
+.stat-row:last-child{margin-bottom:0;}
+.stat-label{color:var(--muted);}
+.stat-val{font-weight:800;font-size:1rem;}
+.stat-val.gold{color:var(--gold);}
+.stat-val.green{color:#44ee66;}
+
+.hint-btn {
+  display:block;
+  width:100%;
+  margin-bottom:7px;
+  background:#1a2540;
+  color:#80b8ff;
+  border:1px solid #2a4070;
+  border-radius:8px;
+  padding:9px 12px;
+  text-align:right;
+  font-size:0.82rem;
+  font-weight:600;
+}
+.hint-btn:last-of-type{margin-bottom:0;}
+.hint-btn:hover{background:#223060;}
+.hint-btn:disabled{opacity:.3;cursor:not-allowed;transform:none;}
+
+#hint-text {
+  background:#0d1528;
+  border-radius:8px;
+  padding:10px 11px;
+  font-size:0.83rem;
+  color:#80b8ff;
+  min-height:44px;
+  line-height:1.55;
+  margin-top:10px;
+  border:1px solid #1a2a50;
+}
+
+/* ── END OVERLAY ── */
+#overlay {
+  display:none;
+  position:fixed; inset:0;
+  background:rgba(0,0,0,.75);
+  z-index:200;
+  align-items:center;
+  justify-content:center;
+}
+#overlay.show{display:flex;}
+
+#overlay-box {
+  background:var(--panel);
+  border-radius:22px;
+  padding:40px 52px;
+  text-align:center;
+  border:2px solid #4060b0;
+  max-width:420px;
+}
+#overlay-box h2{font-size:2rem;margin-bottom:10px;color:#c080ff;}
+#overlay-box p {color:#ccc;margin-bottom:6px;font-size:1rem;}
+.record-line{color:var(--gold);font-weight:700;margin-bottom:20px;min-height:22px;}
+.ov-btns{display:flex;gap:12px;justify-content:center;margin-top:8px;}
+.ov-btns button{padding:12px 28px;font-size:0.95rem;}
+#btn-ov-new  {background:#7733bb;color:#fff;}
+#btn-ov-home {background:var(--panel);color:#aac;border:1px solid var(--border);}
+
+/* pause overlay */
+#pause-overlay {
+  display:none;
+  position:fixed; inset:0;
+  background:rgba(0,0,0,.8);
+  z-index:300;
+  align-items:center;
+  justify-content:center;
+}
+#pause-overlay.show{display:flex;}
+#pause-box {
+  background:var(--panel);
+  border-radius:22px;
+  padding:40px 52px;
+  text-align:center;
+  border:2px solid #2a3a60;
+  max-width:380px;
+}
+#pause-box h2{font-size:1.8rem;margin-bottom:8px;color:#c080ff;}
+#pause-box p {color:var(--muted);margin-bottom:24px;}
+.pause-btns{display:flex;gap:12px;justify-content:center;}
+#btn-resume{background:#7733bb;color:#fff;padding:12px 28px;}
+#btn-go-home{background:transparent;color:#80a0cc;border:1px solid #2a3a60;padding:12px 28px;}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════
+     HOME SCREEN
+════════════════════════════════════════ -->
+<div id="home" class="screen active">
+  <div class="hero">
+    <div class="logo">SET</div>
+    <div class="logo-sub">משחק הקלפים הקלאסי</div>
+    <button class="btn-start" onclick="startGame()">התחל משחק</button>
+    <button class="btn-continue" id="btn-continue" style="display:none" onclick="resumeGame()">המשך משחק</button>
+  </div>
+
+  <div class="home-grid">
+
+    <!-- HIGH SCORES -->
+    <div class="hbox">
+      <div class="hbox-title">שיאים אישיים</div>
+      <div class="rec-row">
+        <span><span class="rec-icon">🏆</span> ניקוד גבוה</span>
+        <span class="rec-val" id="h-score">—</span>
+      </div>
+      <div class="rec-row">
+        <span><span class="rec-icon">⚡</span> זמן מהיר</span>
+        <span class="rec-val blue" id="h-time">—</span>
+      </div>
+      <div class="rec-row">
+        <span><span class="rec-icon">🔥</span> רצף מקסימלי</span>
+        <span class="rec-val green" id="h-streak">—</span>
+      </div>
+      <div class="rec-row">
+        <span><span class="rec-icon">🎮</span> משחקים ששוחקו</span>
+        <span class="rec-val" id="h-games">0</span>
+      </div>
+      <div class="rec-row">
+        <span><span class="rec-icon">✅</span> סטים שנמצאו סה"כ</span>
+        <span class="rec-val" id="h-total-sets">0</span>
+      </div>
+    </div>
+
+    <!-- HOW TO PLAY -->
+    <div class="hbox">
+      <div class="hbox-title">איך משחקים?</div>
+      <div class="rules-grid">
+        <div class="rule-chip">
+          <strong>מה זה סט?</strong>
+          3 קלפים שבכל אחד מ-4 המאפיינים, הערכים זהים לכולם או שונים לכולם.
+        </div>
+        <div class="rule-chip">
+          <strong>4 מאפיינים</strong>
+          מספר (1-3), צבע, צורה, מילוי — בכל מאפיין: כולם אותו דבר, או כל אחד שונה.
+        </div>
+        <div class="rule-chip">
+          <strong>ניקוד</strong>
+          +3 ללא רמזים. רצף רצופים = מכפיל ×2 ×3. רמזים מפחיתים נקודות.
+        </div>
+        <div class="rule-chip">
+          <strong>אין סט בלוח?</strong>
+          לחץ "+3 קלפים". אחרי מציאת סט, הלוח חוזר ל-12.
+        </div>
+      </div>
+      <!-- mini example -->
+      <div style="margin-top:14px;font-size:0.78rem;color:var(--muted);">דוגמת סט תקין:</div>
+      <div class="example-set" id="example-set"></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="hbox">
+      <div class="hbox-title">הגדרות</div>
+      <div class="setting-row">
+        <span>סאונד</span>
+        <button class="toggle on" id="t-sound" onclick="toggleSetting('sound')"></button>
+      </div>
+      <div class="setting-row">
+        <span>מצב עיוור-צבעים (סמלים)</span>
+        <button class="toggle" id="t-cb" onclick="toggleSetting('cb')"></button>
+      </div>
+      <div class="setting-row">
+        <span>הצג קיצורי מקלדת</span>
+        <button class="toggle on" id="t-kb" onclick="toggleSetting('kb')"></button>
+      </div>
+      <div class="setting-row" style="padding-top:16px;border-top:1px solid var(--border);margin-top:4px;border-bottom:none;">
+        <span style="font-size:0.82rem;color:var(--muted)">קיצורי מקלדת: 1-9, Q-P לבחירת קלפים</span>
+      </div>
+    </div>
+
+    <!-- KEYBOARD CHEATSHEET -->
+    <div class="hbox">
+      <div class="hbox-title">קיצורי מקלדת</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.83rem;color:#aac;">
+        <div style="color:var(--muted);">בחירת קלף 1-9</div><div>מקשים 1–9</div>
+        <div style="color:var(--muted);">קלפים 10-12</div><div>Q, W, E</div>
+        <div style="color:var(--muted);">קלפים 13-15</div><div>R, T, Y</div>
+        <div style="color:var(--muted);">משחק חדש</div><div>N</div>
+        <div style="color:var(--muted);">רמז הבא</div><div>H</div>
+        <div style="color:var(--muted);">+3 קלפים</div><div>D</div>
+        <div style="color:var(--muted);">עצור / בית</div><div>Escape</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     GAME SCREEN
+════════════════════════════════════════ -->
+<div id="game" class="screen">
+  <div class="game-topbar">
+    <span class="game-title">SET</span>
+    <button class="topbar-btn" onclick="toggleSoundInGame()" id="snd-btn">🔊 סאונד</button>
+    <button class="topbar-btn" onclick="showPause()">⏸ עצור</button>
+  </div>
+
+  <div id="app">
+    <div id="board-wrap">
+      <div id="board"></div>
+      <div id="game-controls">
+        <button id="btn-deal" style="display:none" onclick="dealThree()">+ 3 קלפים</button>
+        <button id="btn-new"  onclick="newGame()">משחק חדש</button>
+        <div id="streak-badge"></div>
+      </div>
+      <div id="status"></div>
+      <div id="kb-hint"></div>
+    </div>
+
+    <div id="side">
+      <div class="panel-box">
+        <div class="panel-title">סטטיסטיקות</div>
+        <div class="stat-row"><span class="stat-label">ניקוד</span><span class="stat-val gold" id="sc-el">0</span></div>
+        <div class="stat-row"><span class="stat-label">זמן</span><span class="stat-val" id="tm-el">0:00</span></div>
+        <div class="stat-row"><span class="stat-label">סטים שנמצאו</span><span class="stat-val" id="st-el">0</span></div>
+        <div class="stat-row"><span class="stat-label">רצף</span><span class="stat-val green" id="sr-el">0</span></div>
+        <div class="stat-row"><span class="stat-label">קלפים בחפיסה</span><span class="stat-val" id="dk-el">69</span></div>
+      </div>
+
+      <div class="panel-box">
+        <div class="panel-title">שיאים</div>
+        <div class="stat-row"><span class="stat-label">🏆 ניקוד</span><span class="stat-val gold" id="g-hs-score">—</span></div>
+        <div class="stat-row"><span class="stat-label">⚡ זמן</span><span class="stat-val" id="g-hs-time">—</span></div>
+        <div class="stat-row"><span class="stat-label">🔥 רצף</span><span class="stat-val green" id="g-hs-streak">—</span></div>
+      </div>
+
+      <div class="panel-box">
+        <div class="panel-title">רמזים</div>
+        <button class="hint-btn" id="h1" onclick="giveHint(1)">רמז 1 – יש סט? (−1)</button>
+        <button class="hint-btn" id="h2" onclick="giveHint(2)">רמז 2 – קלף אחד (−2)</button>
+        <button class="hint-btn" id="h3" onclick="giveHint(3)">רמז 3 – שניים (−3)</button>
+        <button class="hint-btn" id="h4" onclick="giveHint(4)">הצג סט מלא (−5)</button>
+        <div id="hint-text">לחץ על רמז כשאתה תקוע…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- End overlay -->
+<div id="overlay">
+  <div id="overlay-box">
+    <h2>המשחק הסתיים!</h2>
+    <p id="ov-score"></p>
+    <p id="ov-time"></p>
+    <p id="ov-streak"></p>
+    <p class="record-line" id="ov-record"></p>
+    <div class="ov-btns">
+      <button id="btn-ov-new"  onclick="newGame()">שחק שוב</button>
+      <button id="btn-ov-home" onclick="goHome()">מסך בית</button>
+    </div>
+  </div>
+</div>
+
+<!-- Pause overlay -->
+<div id="pause-overlay">
+  <div id="pause-box">
+    <h2>⏸ משחק מושהה</h2>
+    <p>הניקוד שלך: <strong id="pause-score">0</strong> · זמן: <strong id="pause-time">0:00</strong></p>
+    <div class="pause-btns">
+      <button id="btn-resume"  onclick="resumeGame()">המשך לשחק</button>
+      <button id="btn-go-home" onclick="goHome()">מסך בית</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════
+//  CONSTANTS
+// ══════════════════════════════════════════════════
+const NUMBERS = [1,2,3];
+const COLORS  = ['red','green','purple'];
+const SHAPES  = ['diamond','squiggle','oval'];
+const FILLS   = ['solid','striped','open'];
+const COLOR_HEX = { red:'#e03333', green:'#1a9e1a', purple:'#7722cc' };
+const ATTR_HE = {
+  number:  {1:'1',2:'2',3:'3'},
+  color:   {red:'אדום',green:'ירוק',purple:'סגול'},
+  shape:   {diamond:'יהלום',squiggle:'גל',oval:'עיגול'},
+  fill:    {solid:'מלא',striped:'פסים',open:'ריק'},
+};
+const KEY_MAP = ['1','2','3','4','5','6','7','8','9','q','w','e','r','t','y','u','i','o'];
+
+// ══════════════════════════════════════════════════
+//  SETTINGS  (localStorage)
+// ══════════════════════════════════════════════════
+const SETTINGS_KEY = 'set-settings';
+
+function getSettings() {
+  try { return JSON.parse(localStorage.getItem(SETTINGS_KEY))||{}; }
+  catch{ return {}; }
+}
+function saveSetting(k,v){
+  const s=getSettings(); s[k]=v;
+  localStorage.setItem(SETTINGS_KEY,JSON.stringify(s));
+}
+
+let CFG = { sound:true, cb:false, kb:true };
+
+function loadSettings() {
+  const s = getSettings();
+  CFG.sound = s.sound!==false;
+  CFG.cb    = !!s.cb;
+  CFG.kb    = s.kb!==false;
+  applySettings();
+}
+
+function applySettings() {
+  setToggle('t-sound', CFG.sound);
+  setToggle('t-cb',    CFG.cb);
+  setToggle('t-kb',    CFG.kb);
+  document.getElementById('kb-hint').style.display = CFG.kb ? '' : 'none';
+  document.getElementById('kb-hint').textContent =
+    '1–9, Q–Y לבחירת קלפים · N משחק חדש · H רמז · D +3 קלפים · Esc בית';
+  const sndBtn = document.getElementById('snd-btn');
+  if(sndBtn) sndBtn.textContent = CFG.sound ? '🔊 סאונד' : '🔇 סאונד';
+}
+
+function setToggle(id, val) {
+  const el = document.getElementById(id);
+  if(el) el.classList.toggle('on', val);
+}
+
+function toggleSetting(key) {
+  CFG[key] = !CFG[key];
+  saveSetting(key, CFG[key]);
+  applySettings();
+  if(key==='cb') renderBoard();
+}
+
+function toggleSoundInGame(){
+  CFG.sound = !CFG.sound;
+  saveSetting('sound', CFG.sound);
+  applySettings();
+}
+
+// ══════════════════════════════════════════════════
+//  SCREENS
+// ══════════════════════════════════════════════════
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goHome(){
+  document.getElementById('pause-overlay').classList.remove('show');
+  document.getElementById('overlay').classList.remove('show');
+  pauseTimer();
+  showScreen('home');
+  refreshHome();
+  // show "continue" button if a game is in progress
+  document.getElementById('btn-continue').style.display =
+    (board.length>0 && !gameOver) ? 'inline-block' : 'none';
+}
+
+function startGame(){
+  newGame();
+  showScreen('game');
+}
+
+function resumeGame(){
+  document.getElementById('pause-overlay').classList.remove('show');
+  showScreen('game');
+  startTimer();
+}
+
+function showPause(){
+  pauseTimer();
+  document.getElementById('pause-score').textContent = score;
+  document.getElementById('pause-time').textContent  = fmtTime(timerSec);
+  document.getElementById('pause-overlay').classList.add('show');
+}
+
+// ══════════════════════════════════════════════════
+//  DECK
+// ══════════════════════════════════════════════════
+function buildDeck(){
+  const d=[]; let id=0;
+  for(const n of NUMBERS)
+    for(const c of COLORS)
+      for(const s of SHAPES)
+        for(const f of FILLS)
+          d.push({number:n,color:c,shape:s,fill:f,id:id++});
+  return d;
+}
+
+function shuffle(a){
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+// ══════════════════════════════════════════════════
+//  SET LOGIC
+// ══════════════════════════════════════════════════
+function isSet(a,b,c){
+  return ['number','color','shape','fill'].every(k=>{
+    const s=new Set([a[k],b[k],c[k]]);
+    return s.size===1||s.size===3;
+  });
+}
+
+function findSet(cards){
+  for(let i=0;i<cards.length-2;i++)
+    for(let j=i+1;j<cards.length-1;j++)
+      for(let k=j+1;k<cards.length;k++)
+        if(isSet(cards[i],cards[j],cards[k]))
+          return [i,j,k];
+  return null;
+}
+
+// ══════════════════════════════════════════════════
+//  SVG
+// ══════════════════════════════════════════════════
+function makeStripePat(uid,hex){
+  return `<defs><pattern id="sp${uid}" patternUnits="userSpaceOnUse" width="4" height="4" patternTransform="rotate(40 0 0)">
+    <line x1="0" y1="0" x2="0" y2="4" stroke="${hex}" stroke-width="1.5"/>
+  </pattern></defs>`;
+}
+
+function drawShape(shape,fill,hex,uid){
+  const pat      = fill==='striped' ? makeStripePat(uid,hex) : '';
+  const fillAttr = fill==='solid'   ? `fill="${hex}"`
+                 : fill==='open'    ? `fill="none"`
+                 :                   `fill="url(#sp${uid})"`;
+  const sw       = fill==='open'    ? 2.5 : 2.2;
+  const stroke   = `stroke="${hex}" stroke-width="${sw}" stroke-linejoin="round" stroke-linecap="round"`;
+
+  let el='';
+  if(shape==='diamond'){
+    el=`<polygon points="25,2 47,15 25,28 3,15" ${fillAttr} ${stroke}/>`;
+  } else if(shape==='oval'){
+    el=`<ellipse cx="25" cy="15" rx="21" ry="11" ${fillAttr} ${stroke}/>`;
+  } else {
+    // squiggle — horizontal S-curve
+    el=`<path d="
+      M 5,22
+      C 1,22 1,8 10,8
+      C 17,8 21,16 27,17
+      C 33,18 39,14 40,10
+      C 42,6 46,6 46,8
+      C 47,10 46,14 44,16
+      C 40,20 34,16 27,15
+      C 20,14 16,8 10,16
+      C 6,20 4,28 5,22 Z
+    " ${fillAttr} ${stroke}/>`;
+  }
+  return `<svg viewBox="0 0 50 30" width="62" height="37" xmlns="http://www.w3.org/2000/svg">${pat}${el}</svg>`;
+}
+
+const CB_SYM = {diamond:'◆',squiggle:'≈',oval:'●'};
+
+function renderCardHTML(card,boardIdx){
+  const hex=COLOR_HEX[card.color];
+  let html='';
+  for(let i=0;i<card.number;i++){
+    const uid=`${card.id}_${i}`;
+    html += drawShape(card.shape,card.fill,hex,uid);
+    if(CFG.cb)
+      html += `<span style="font-size:1rem;color:${hex};display:block;text-align:center;line-height:1">${CB_SYM[card.shape]}</span>`;
+  }
+  const key = CFG.kb ? (KEY_MAP[boardIdx]??'').toUpperCase() : '';
+  return `<span class="card-key">${key}</span>${html}`;
+}
+
+// ══════════════════════════════════════════════════
+//  GAME STATE
+// ══════════════════════════════════════════════════
+let deck=[], board=[], selected=[], locked=false, gameOver=false;
+let score=0, setsFound=0, streak=0, maxStreak=0;
+let hintLevel=0, hintIndices=null;
+let timerSec=0, timerInterval=null;
+
+// ══════════════════════════════════════════════════
+//  RENDER
+// ══════════════════════════════════════════════════
+function renderBoard(animate=false){
+  const el=document.getElementById('board');
+  el.innerHTML='';
+  board.forEach((card,idx)=>{
+    const div=document.createElement('div');
+    div.className='card';
+    div.dataset.idx=idx;
+    div.style.animationDelay=animate?`${idx*0.035}s`:'0s';
+    div.innerHTML=renderCardHTML(card,idx);
+    div.addEventListener('click',()=>onCardClick(idx));
+    el.appendChild(div);
+  });
+  syncUI();
+}
+
+function syncUI(){
+  document.querySelectorAll('.card').forEach(el=>{
+    const i=+el.dataset.idx;
+    el.classList.toggle('selected',selected.includes(i));
+    el.classList.toggle('locked',locked);
+  });
+
+  const hasSet=findSet(board);
+  document.getElementById('btn-deal').style.display=(!hasSet&&deck.length>=3)?'inline-block':'none';
+
+  document.getElementById('sc-el').textContent=score;
+  document.getElementById('st-el').textContent=setsFound;
+  document.getElementById('sr-el').textContent=streak;
+  document.getElementById('dk-el').textContent=deck.length;
+
+  const sb=document.getElementById('streak-badge');
+  if(streak>=3){ sb.style.display='inline-block'; sb.textContent=`🔥 רצף ×${streak}`; }
+  else          { sb.style.display='none'; }
+
+  refreshInGameHS();
+}
+
+function refreshInGameHS(){
+  const hs=getHS();
+  document.getElementById('g-hs-score').textContent  = hs.score  ?? '—';
+  document.getElementById('g-hs-streak').textContent = hs.streak ?? '—';
+  if(hs.time!=null){
+    document.getElementById('g-hs-time').textContent = fmtTime(hs.time);
+  } else {
+    document.getElementById('g-hs-time').textContent = '—';
+  }
+}
+
+// ══════════════════════════════════════════════════
+//  TIMER
+// ══════════════════════════════════════════════════
+function startTimer(){
+  clearInterval(timerInterval);
+  timerInterval=setInterval(()=>{timerSec++;document.getElementById('tm-el').textContent=fmtTime(timerSec);},1000);
+}
+function pauseTimer(){ clearInterval(timerInterval); }
+function fmtTime(s){ const m=Math.floor(s/60),sec=s%60; return `${m}:${sec.toString().padStart(2,'0')}`; }
+
+// ══════════════════════════════════════════════════
+//  GAME FLOW
+// ══════════════════════════════════════════════════
+function newGame(){
+  deck=shuffle(buildDeck());
+  board=[]; selected=[]; locked=false; gameOver=false;
+  score=0; setsFound=0; streak=0; maxStreak=0;
+  hintLevel=0; hintIndices=null;
+
+  pauseTimer(); timerSec=0;
+  document.getElementById('tm-el').textContent='0:00';
+  startTimer();
+
+  board=deck.splice(0,12);
+  while(!findSet(board)&&deck.length>=3)
+    board.push(...deck.splice(0,3));
+
+  resetHintUI();
+  renderBoard(true);
+  setStatus('');
+  document.getElementById('overlay').classList.remove('show');
+  document.getElementById('pause-overlay').classList.remove('show');
+  showScreen('game');
+}
+
+function dealThree(){
+  if(deck.length<3)return;
+  board.push(...deck.splice(0,3));
+  hintIndices=null;
+  resetHintUI();
+  renderBoard();
+  setStatus('+3 קלפים חולקו');
+}
+
+// ══════════════════════════════════════════════════
+//  CARD CLICK
+// ══════════════════════════════════════════════════
+function onCardClick(idx){
+  if(locked)return;
+  if(selected.includes(idx)){
+    selected=selected.filter(i=>i!==idx);
+  } else {
+    if(selected.length>=3)return;
+    selected.push(idx);
+    playTone(440+idx*18,0.06,0.05);
+  }
+  syncUI();
+  if(selected.length===3)validateSelection();
+}
+
+function validateSelection(){
+  const [a,b,c]=selected.map(i=>board[i]);
+  const ok=isSet(a,b,c);
+  locked=true;
+  const cards=document.querySelectorAll('.card');
+  selected.forEach(i=>cards[i].classList.add(ok?'flash-ok':'flash-bad'));
+
+  if(ok){
+    const mult=streakMultiplier();
+    const bonus=Math.max(0,3-hintLevel)*mult;
+    score+=bonus; setsFound++; streak++;
+    if(streak>maxStreak)maxStreak=streak;
+    playSuccess();
+    const multTxt=mult>1?` (×${mult})`:'';
+    setStatus(`✓ סט! +${bonus} נקודות${multTxt}${streak>=3?' 🔥':''}`, '#55ee77');
+    setTimeout(removeSet,600);
+  } else {
+    streak=0;
+    playFail();
+    setStatus('✗ לא סט — נסה שוב','#ff5555');
+    setTimeout(()=>{
+      selected.forEach(i=>cards[i].classList.remove('flash-bad'));
+      selected=[]; locked=false; syncUI();
+    },800);
+  }
+}
+
+function streakMultiplier(){
+  if(streak>=5)return 3;
+  if(streak>=3)return 2;
+  return 1;
+}
+
+function removeSet(){
+  const sortedDesc=[...selected].sort((a,b)=>b-a);
+  const wasOver12=board.length>12;
+
+  if(wasOver12){
+    sortedDesc.forEach(i=>board.splice(i,1));
+  } else {
+    const repl=deck.splice(0,Math.min(3,deck.length));
+    if(repl.length===3){
+      sortedDesc.forEach((i,pos)=>{board[i]=repl[pos];});
+    } else {
+      sortedDesc.forEach(i=>board.splice(i,1));
+      board.push(...repl);
+    }
+  }
+
+  selected=[]; hintLevel=0; hintIndices=null; locked=false;
+  resetHintUI(); renderBoard(); syncUI();
+
+  const totalSets=(getHS().totalSets||0)+1;
+  savePartialStat('totalSets',totalSets);
+
+  if(board.length===0&&deck.length===0){ endGame(); return; }
+  if(!findSet(board)&&deck.length===0)  { endGame(); return; }
+}
+
+function endGame(){
+  gameOver=true;
+  pauseTimer();
+  const records=saveHighScore(score,timerSec,maxStreak);
+  document.getElementById('ov-score').textContent  =`ניקוד: ${score}`;
+  document.getElementById('ov-time').textContent   =`זמן: ${fmtTime(timerSec)}`;
+  document.getElementById('ov-streak').textContent =`רצף מקסימלי: ${maxStreak}`;
+  const rl=[];
+  if(records.score) rl.push('🏆 שיא ניקוד חדש!');
+  if(records.time)  rl.push('⚡ שיא זמן חדש!');
+  if(records.streak)rl.push('🔥 שיא רצף חדש!');
+  document.getElementById('ov-record').textContent=rl.join('  ');
+  document.getElementById('overlay').classList.add('show');
+  playSuccess(true);
+}
+
+// ══════════════════════════════════════════════════
+//  HINTS
+// ══════════════════════════════════════════════════
+function resetHintUI(){
+  document.getElementById('hint-text').textContent='לחץ על רמז כשאתה תקוע…';
+  document.querySelectorAll('.hint-btn').forEach(b=>b.disabled=false);
+  clearHints();
+}
+
+function clearHints(){
+  document.querySelectorAll('.card').forEach(el=>el.classList.remove('hint-hi'));
+}
+
+function giveHint(level){
+  if(!hintIndices)hintIndices=findSet(board);
+  const penalty=[0,1,2,3,5][level];
+  score-=penalty;
+  hintLevel=Math.max(hintLevel,level);
+  clearHints();
+  const el=document.getElementById('hint-text');
+  const cards=document.querySelectorAll('.card');
+
+  if(!hintIndices){
+    el.textContent='אין סט בלוח. לחץ "+3 קלפים".';
+  } else if(level===1){
+    el.textContent='יש סט בלוח! המשך לחפש…';
+  } else if(level===2){
+    cards[hintIndices[0]].classList.add('hint-hi');
+    el.textContent='הקלף המסומן בכחול שייך לסט.';
+  } else if(level===3){
+    cards[hintIndices[0]].classList.add('hint-hi');
+    cards[hintIndices[1]].classList.add('hint-hi');
+    el.textContent='שני הקלפים המסומנים שייכים לאותו סט. מצא את השלישי!';
+  } else {
+    hintIndices.forEach(i=>cards[i].classList.add('hint-hi'));
+    el.textContent=`הסט: ${hintIndices.map(i=>descCard(board[i])).join(' | ')}`;
+  }
+  syncUI();
+}
+
+function descCard(c){
+  return `${ATTR_HE.number[c.number]} ${ATTR_HE.color[c.color]} ${ATTR_HE.shape[c.shape]} ${ATTR_HE.fill[c.fill]}`;
+}
+
+// ══════════════════════════════════════════════════
+//  HIGH SCORES
+// ══════════════════════════════════════════════════
+const LS_KEY='set-hs-v2';
+
+function getHS(){ try{return JSON.parse(localStorage.getItem(LS_KEY))||{};}catch{return {};} }
+
+function saveHighScore(sc,timeSec,st){
+  const hs=getHS(), rec={score:false,time:false,streak:false};
+  hs.games=(hs.games||0)+1;
+  if(!hs.score  ||sc>hs.score)        {hs.score=sc;rec.score=true;}
+  if(!hs.time   ||timeSec<hs.time)    {hs.time=timeSec;rec.time=true;}
+  if(!hs.streak ||st>hs.streak)       {hs.streak=st;rec.streak=true;}
+  localStorage.setItem(LS_KEY,JSON.stringify(hs));
+  return rec;
+}
+
+function savePartialStat(k,v){
+  const hs=getHS(); hs[k]=v;
+  localStorage.setItem(LS_KEY,JSON.stringify(hs));
+}
+
+function refreshHome(){
+  const hs=getHS();
+  document.getElementById('h-score').textContent     =hs.score    ??'—';
+  document.getElementById('h-streak').textContent    =hs.streak   ??'—';
+  document.getElementById('h-games').textContent     =hs.games    ??'0';
+  document.getElementById('h-total-sets').textContent=hs.totalSets??'0';
+  document.getElementById('h-time').textContent      =hs.time!=null?fmtTime(hs.time):'—';
+  loadSettings();
+}
+
+// ══════════════════════════════════════════════════
+//  SOUND
+// ══════════════════════════════════════════════════
+let audioCtx=null;
+function getCtx(){ if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)(); return audioCtx; }
+
+function playTone(freq,vol=0.1,dur=0.08){
+  if(!CFG.sound)return;
+  try{
+    const ctx=getCtx(),osc=ctx.createOscillator(),gain=ctx.createGain();
+    osc.type='sine';osc.frequency.value=freq;
+    gain.gain.setValueAtTime(vol,ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+dur);
+    osc.connect(gain);gain.connect(ctx.destination);
+    osc.start();osc.stop(ctx.currentTime+dur);
+  }catch(e){}
+}
+
+function playSuccess(big=false){
+  const notes=big?[523,659,784,1047,1319]:[523,659,784];
+  notes.forEach((f,i)=>setTimeout(()=>playTone(f,0.12,0.15),i*100));
+}
+
+function playFail(){ playTone(220,0.1,0.22); setTimeout(()=>playTone(180,0.08,0.28),150); }
+
+// ══════════════════════════════════════════════════
+//  KEYBOARD
+// ══════════════════════════════════════════════════
+document.addEventListener('keydown',e=>{
+  if(e.ctrlKey||e.metaKey||e.altKey)return;
+  const key=e.key.toLowerCase();
+  const gameActive=document.getElementById('game').classList.contains('active');
+
+  if(key==='escape'){
+    if(gameActive)showPause();
+    else if(document.getElementById('pause-overlay').classList.contains('show'))resumeGame();
+    return;
+  }
+  if(!gameActive)return;
+  if(key==='n'){newGame();return;}
+  if(key==='h'){giveHint(Math.min(4,(hintLevel||0)+1)||1);return;}
+  if(key==='d'){const b=document.getElementById('btn-deal');if(b.style.display!=='none')dealThree();return;}
+
+  const idx=KEY_MAP.indexOf(key);
+  if(idx>=0&&idx<board.length)onCardClick(idx);
+});
+
+// ══════════════════════════════════════════════════
+//  STATUS
+// ══════════════════════════════════════════════════
+function setStatus(msg,color='#f0c040'){
+  const el=document.getElementById('status');
+  el.textContent=msg; el.style.color=color;
+}
+
+// ══════════════════════════════════════════════════
+//  EXAMPLE SET (home screen)
+// ══════════════════════════════════════════════════
+function buildExampleSet(){
+  const ex=[
+    {number:1,color:'red',   shape:'diamond',fill:'solid', id:200},
+    {number:2,color:'green', shape:'diamond',fill:'solid', id:201},
+    {number:3,color:'purple',shape:'diamond',fill:'solid', id:202},
+  ];
+  const wrap=document.getElementById('example-set');
+  wrap.innerHTML='';
+  ex.forEach(card=>{
+    const div=document.createElement('div');
+    div.className='mini-card';
+    for(let i=0;i<card.number;i++)
+      div.innerHTML+=drawShape(card.shape,card.fill,COLOR_HEX[card.color],`ex${card.id}_${i}`);
+    wrap.appendChild(div);
+  });
+  const note=document.createElement('div');
+  note.style.cssText='font-size:0.75rem;color:#6a7a99;align-self:center;';
+  note.textContent='כל מאפיין שונה לגמרי — סט תקין!';
+  wrap.appendChild(note);
+}
+
+// ══════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════
+loadSettings();
+refreshHome();
+buildExampleSet();
+</script>
+</body>
+</html>
